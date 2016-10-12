@@ -22,8 +22,16 @@ function getMethodSignature(contractABI, methodName, cb){
 }
 
 function sha3(a){
-  return ethUtil.sha3(a);
+  return ethUtil.sha3(a).toString('hex');
+}
+
+function getMethodID(contractABI, methodName, cb){
+  getMethodSignature(contractABI, methodName, function(methodSignature){
+    var methodID = sha3(methodSignature).substring(0, 8);
+    cb(methodID);
+  });
 }
 
 exports.Sha3 = sha3;
 exports.GetMethodSignature = getMethodSignature;
+exports.GetMethodID = getMethodID;
