@@ -56,7 +56,7 @@ function convertInputsToPaddedHex(argumentList, methodInputs){
         data += pad('0', 64);
       } 
     } else if(input.type == 'address'){
-        data += arg.substring(2);
+        data += pad(arg.substring(2), 64);
     } else {
       console.log('ERROR in convertInputsToPaddedHex, unsupported type:', input.type);
     }
@@ -71,7 +71,7 @@ function addFunction(contractInstance, contractABI, address, methodObj){
     var rawTx = {
       nonce: '0x00',
       gasPrice: '0x'+padToEven(Number(1).toString(16)),
-      gasLimit: '0x'+padToEven(Number(21000).toString(16)),     
+      gasLimit: '0x'+padToEven(Number(100000).toString(16)),     
       to: address,
       value: '0x00',
       data: data
