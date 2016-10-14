@@ -41,30 +41,39 @@ function getMethodID(contractABI, methodName, cb){
   }
 }
 
+function convertInputsToPaddedHex(argumentList, methodInputs){
+  var data = '';
+  for(var i=0; i<argumentList.length-1; i++){
+    var arg = argumentList[i];
+    var input = methodInputs[i];
+    if(input.type == 'uint32' || input.type == 'uint256'){
+      var paddedhexArg = pad(arg.toString(16), 64);
+      data += paddedhexArg; 
+    } else if(input.type == 'bool'){
+      if(arg == true){
+        data += pad('1', 64);
+      } else {
+        data += pad('0', 64);
+      } 
+    } else if(input.type == 'address'){
+        data += arg.substring(2);
+    } else {
+      console.log('ERROR in convertInputsToPaddedHex, unsupported type:', input.type);
+    }
+  }
+  return data;
+}
+
 function addFunction(contractInstance, contractABI, address, methodObj){
   contractInstance[methodObj.name] = function(){
     var methodID = getMethodID(contractABI, methodObj.name);  
-    var data = '0x'+methodID;
-    for(var i=0; i<arguments.length-1; i++){
-      var arg = arguments[i];
-      var input = methodObj.inputs[i];
-      if(input.type == 'uint32'){
-        var paddedhexArg = pad(arg.toString(16), 64);
-        data += paddedhexArg; 
-      } else if(input.type == 'bool'){
-        if(arg == true){
-          data += pad('1', 64);
-        } else {
-          data += pad('0', 64);
-        }
-      }
-    }
+    var data = '0x'+methodID + convertInputsToPaddedHex(arguments, methodObj.inputs);
     var rawTx = {
-      nonce: '0x0',
-      gasPrice: '0x0',
-      gasLimit: '0x0',     
+      nonce: '0x00',
+      gasPrice: '0x'+padToEven(Number(1).toString(16)),
+      gasLimit: '0x'+padToEven(Number(21000).toString(16)),     
       to: address,
-      value: '0x0',
+      value: '0x00',
       data: data
     };
     arguments[arguments.length-1](rawTx);
@@ -78,6 +87,10 @@ function getContractInstance(contractABI, address, cb){
     addFunction(contractInstance, contractABI, address, methodObj);
   }  
   cb(contractInstance);
+}
+
+function padToEven(n, z){
+  return pad(n, n.length + n.length % 2, z);
 }
 
 function pad(n, width, z) {

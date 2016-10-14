@@ -25,6 +25,7 @@ describe('ethereum-transaction-creator', function() {
       contractInstance.baz(69, true, function(rawTx){
         expect(rawTx).to.not.be(null);
         expect(rawTx.data).to.be('0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001');
+        console.log('rawTx:', rawTx);
         done();
       });
     });
