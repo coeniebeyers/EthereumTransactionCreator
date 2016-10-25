@@ -20,4 +20,14 @@ describe('ethereum-transaction-creator', function() {
       done();
     });
   });
+  it('can produce an object will all members from a contract ABI', function(done) {
+    index.GetContractObject(tokenContractABI, function(contractObj){ 
+      expect(contractObj).to.not.be(null);
+      expect(contractObj.DVPTransfer).to.not.be(undefined);
+      contractObj.baz(69, function(res){
+        console.log('res:', res);
+        done();
+      });
+    });
+  });
 });
