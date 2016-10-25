@@ -3,11 +3,6 @@ var index = require('../index.js');
 var tokenContractABI = require('./fixtures/tokenContractABI.js');
 
 describe('ethereum-transaction-creator', function() {
-  it('should create a sha3 of a string', function(done) {
-    var result = index.Sha3('DVPTransfer(address,uint256)');
-    expect(result).to.be('142eb4d786c73c5adaa21526280b6ffe9788604fefa1e2d6ef318db1dc181605');
-    done();
-  });
   it('can get the method signature from a contract ABI', function(done) {
     index.GetMethodSignature(tokenContractABI, 'DVPTransfer', function(methodSignature){ 
       expect(methodSignature).to.be('DVPTransfer(address,uint256)');
@@ -20,12 +15,11 @@ describe('ethereum-transaction-creator', function() {
       done();
     });
   });
-  it('can produce an object will all members from a contract ABI', function(done) {
-    index.GetContractObject(tokenContractABI, function(contractObj){ 
-      expect(contractObj).to.not.be(null);
-      expect(contractObj.DVPTransfer).to.not.be(undefined);
-      contractObj.baz(69, function(res){
-        console.log('res:', res);
+  it('can construct a contract object with members for getting raw transactions', function(done) {
+    index.GetContractInstance(tokenContractABI, '0xabc', function(contractInstance){
+      contractInstance.baz(69, true, function(rawTx){
+        expect(rawTx).to.not.be(null);
+        expect(rawTx.data).to.be('0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001');
         done();
       });
     });

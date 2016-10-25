@@ -6,7 +6,7 @@ var abi =
     payable: false,
     type: 'function' },
   { constant: false,
-    inputs: [ { name: 'a', type: 'uint32' }],
+    inputs: [ { name: 'x', type: 'uint32' }, {name: 'y', type: 'bool'} ],
     name: 'baz',
     outputs: [],
     payable: false,

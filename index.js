@@ -15,10 +15,16 @@ function getMethodSignature(contractABI, methodName, cb){
           methodSignature += ')';
         }
       }
-      break;
+      if(cb == null){
+        return methodSignature;
+      } else {
+        break;
+      }
     }
   }
-  cb(methodSignature);
+  if(cb){
+    cb(methodSignature);
+  }
 }
 
 function sha3(a){
@@ -26,51 +32,74 @@ function sha3(a){
 }
 
 function getMethodID(contractABI, methodName, cb){
-  getMethodSignature(contractABI, methodName, function(methodSignature){
-    var methodID = sha3(methodSignature).substring(0, 8);
+  var methodSignature = getMethodSignature(contractABI, methodName);
+  var methodID = sha3(methodSignature).substring(0, 8);
+  if(cb == null){
+    return methodID;
+  } else {
     cb(methodID);
-  });
+  }
 }
 
-/*function getMethodObj(contractObj, methodName){
-
-  var contractObj = {};
-  for(var i in contractABI){
-    var methodObj = contractABI[i];
-}*/
-
-function getContractObject(contractABI, cb){
-  var contractObj = {};
-  for(var i in contractABI){
-    var methodObj = contractABI[i];
-    getMethodID(contractABI, methodObj.name, function(methodID){
-      contractObj[methodObj.name] = function(){
-        var argumentList = arguments;
-        var data = '' + methodID;
-        for(var j=0; j < argumentList.length-1; j++){
-          var arg = argumentList[j];
-            var hexArg = arg.toString(16);
-            var paddedHexArg = ethUtil.setLengthLeft(hexArg, 32);
-            console.log('paddedHexArg:', paddedHexArg);
-            console.log('paddedHexArg.toString():', paddedHexArg.toString());
-            data += paddedHexArg.toString();
-        } 
-        var rawTx = {
-          nonce: '0x00',
-          gasPrice: '0x01',
-          gasLimit: '0x2710',
-          to: '0x0000000000000000000000000000000000000000',
-          value: '0x00',
-          data: data,
-        }
-        argumentList[argumentList.length-1](rawTx);
-      }
-    });
+function convertInputsToPaddedHex(argumentList, methodInputs){
+  var data = '';
+  for(var i=0; i<argumentList.length-1; i++){
+    var arg = argumentList[i];
+    var input = methodInputs[i];
+    if(input.type == 'uint32' || input.type == 'uint256'){
+      var paddedhexArg = pad(arg.toString(16), 64);
+      data += paddedhexArg; 
+    } else if(input.type == 'bool'){
+      if(arg == true){
+        data += pad('1', 64);
+      } else {
+        data += pad('0', 64);
+      } 
+    } else if(input.type == 'address'){
+        data += pad(arg.substring(2), 64);
+    } else {
+      console.log('ERROR in convertInputsToPaddedHex, unsupported type:', input.type);
+    }
   }
-  cb(contractObj);
+  return data;
+}
+
+function addFunction(contractInstance, contractABI, address, methodObj){
+  contractInstance[methodObj.name] = function(){
+    var methodID = getMethodID(contractABI, methodObj.name);  
+    var data = '0x'+methodID + convertInputsToPaddedHex(arguments, methodObj.inputs);
+    var rawTx = {
+      nonce: '0x00',
+      gasPrice: '0x'+padToEven(Number(1).toString(16)),
+      gasLimit: '0x'+padToEven(Number(100000).toString(16)),     
+      to: address,
+      value: '0x00',
+      data: data
+    };
+    arguments[arguments.length-1](rawTx);
+  }
+}
+
+function getContractInstance(contractABI, address, cb){
+  var contractInstance = {};
+  for(var i in contractABI){
+    var methodObj = contractABI[i];
+    addFunction(contractInstance, contractABI, address, methodObj);
+  }  
+  cb(contractInstance);
+}
+
+function padToEven(n, z){
+  return pad(n, n.length + n.length % 2, z);
+}
+
+function pad(n, width, z) {
+  z = z || '0';
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
 exports.Sha3 = sha3;
 exports.GetMethodSignature = getMethodSignature;
 exports.GetMethodID = getMethodID;
-exports.GetContractObject = getContractObject;
+exports.GetContractInstance = getContractInstance;
