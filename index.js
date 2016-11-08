@@ -49,6 +49,9 @@ function convertInputsToPaddedHex(argumentList, methodInputs){
     if(input.type == 'uint32' || input.type == 'uint256'){
       var paddedhexArg = pad(arg.toString(16), 64);
       data += paddedhexArg; 
+    if(input.type == 'int32' || input.type == 'int256'){
+      var paddedhexArg = pad(arg.toString(16), 64);
+      data += paddedhexArg; 
     } else if(input.type == 'bool'){
       if(arg == true){
         data += pad('1', 64);
