@@ -24,4 +24,13 @@ describe('ethereum-transaction-creator', function() {
       });
     });
   });
+  it('can construct a contract object with type int256', function(done) {
+    index.GetContractInstance(tokenContractABI, '0xabc', function(contractInstance){
+      contractInstance.testingInt256(69, function(rawTx){
+        expect(rawTx).to.not.be(null);
+        expect(rawTx.data).to.be('0xc4cf56320000000000000000000000000000000000000000000000000000000000000045');
+        done();
+      });
+    });
+  });
 });
